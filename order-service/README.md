@@ -16,8 +16,8 @@ npm install
 npm run dev                                   # http://localhost:3003/health
 npm test
 # integration tests:
-# bash:       MONGO_URI_TEST=mongodb://localhost:27017/order_test npm run test:int
-# PowerShell: $env:MONGO_URI_TEST="mongodb://localhost:27017/order_test"; npm run test:int
+# bash:       MONGO_URI_TEST=mongodb://127.0.0.1:27017/order_test npm run test:int
+# PowerShell: $env:MONGO_URI_TEST="mongodb://127.0.0.1:27017/order_test"; npm run test:int
 ```
 You don't need Por's code to be finished: unit tests use pure functions, and integration tests use a **stub product-service** (a tiny Express app started inside the test on a random port).
 
@@ -106,7 +106,7 @@ Constraints: TypeScript strict, Express 5, mongoose 9, CommonJS, Node 24 global 
 no `any`, simple readable code with short comments (I must explain it in a presentation).
 
 Finish by running in order-service/: npm run build, npm test, and (with
-`docker run -d -p 27017:27017 mongo:7`) MONGO_URI_TEST=mongodb://localhost:27017/order_test
+`docker run -d -p 27017:27017 mongo:7`) MONGO_URI_TEST=mongodb://127.0.0.1:27017/order_test
 npm run test:int. Fix until green. Then summarize each file and give curl examples
 (login via http://localhost:8080/api/auth/login to get a token first).
 ```

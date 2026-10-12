@@ -16,8 +16,8 @@ npm install
 npm run dev                       # http://localhost:3001/health
 npm test                          # unit tests
 # integration tests (needs the mongo container):
-# bash:       MONGO_URI_TEST=mongodb://localhost:27017/auth_test npm run test:int
-# PowerShell: $env:MONGO_URI_TEST="mongodb://localhost:27017/auth_test"; npm run test:int
+# bash:       MONGO_URI_TEST=mongodb://127.0.0.1:27017/auth_test npm run test:int
+# PowerShell: $env:MONGO_URI_TEST="mongodb://127.0.0.1:27017/auth_test"; npm run test:int
 ```
 
 ## Target structure
@@ -110,7 +110,7 @@ runtime dependencies beyond what is in package.json unless really needed. Never 
 tokens. Keep code simple and commented enough for a student to explain it in a presentation.
 
 When done, run inside auth-service/: npm run build, npm test, and if Docker is available
-`docker run -d -p 27017:27017 mongo:7` then MONGO_URI_TEST=mongodb://localhost:27017/auth_test
+`docker run -d -p 27017:27017 mongo:7` then MONGO_URI_TEST=mongodb://127.0.0.1:27017/auth_test
 npm run test:int. Fix everything until green. Finally give me a short summary of what each file
 does and a curl example for register, login and me.
 ```

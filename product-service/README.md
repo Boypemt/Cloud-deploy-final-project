@@ -16,8 +16,8 @@ npm install
 npm run dev                       # http://localhost:3002/health
 npm test
 # integration tests:
-# bash:       MONGO_URI_TEST=mongodb://localhost:27017/product_test npm run test:int
-# PowerShell: $env:MONGO_URI_TEST="mongodb://localhost:27017/product_test"; npm run test:int
+# bash:       MONGO_URI_TEST=mongodb://127.0.0.1:27017/product_test npm run test:int
+# PowerShell: $env:MONGO_URI_TEST="mongodb://127.0.0.1:27017/product_test"; npm run test:int
 ```
 Need an admin token to try admin routes? Run auth-service too (`docker compose up -d auth-service`) and log in as `admin@campusmart.local / Admin@1234`, or sign one in a test with `jsonwebtoken` and the same `JWT_SECRET`.
 
@@ -98,6 +98,6 @@ Constraints: TypeScript strict, Express 5, mongoose 9, CommonJS, no `any`, simpl
 short comments (I must explain it in a presentation). No new runtime dependencies unless needed.
 
 Finish by running in product-service/: npm run build, npm test, and (with
-`docker run -d -p 27017:27017 mongo:7`) MONGO_URI_TEST=mongodb://localhost:27017/product_test
+`docker run -d -p 27017:27017 mongo:7`) MONGO_URI_TEST=mongodb://127.0.0.1:27017/product_test
 npm run test:int. Fix until all green. Then summarize each file and give curl examples.
 ```
