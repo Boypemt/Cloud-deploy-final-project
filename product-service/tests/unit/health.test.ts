@@ -15,3 +15,14 @@ describe('GET /health', () => {
     expect(res.body).toHaveProperty('message');
   });
 });
+
+describe('error handling', () => {
+  it('returns 400 JSON (not 500) for a malformed JSON body', async () => {
+    const res = await request(createApp())
+      .post('/api/products')
+      .set('Content-Type', 'application/json')
+      .send('{bad json');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ message: 'Invalid JSON body' });
+  });
+});
