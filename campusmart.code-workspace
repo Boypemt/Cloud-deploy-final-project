@@ -1,0 +1,29 @@
+{
+  "folders": [
+    { "name": "1 · auth-service (Bio · PM)", "path": "auth-service" },
+    { "name": "2 · product-service (Por)", "path": "product-service" },
+    { "name": "3 · order-service (Fluke)", "path": "order-service" },
+    { "name": "4 · web-frontend (Bonus)", "path": "web-frontend" },
+    { "name": "5 · qa-automation (Pound · Tester)", "path": "qa-automation" },
+    { "name": "◆ project root (docs · deploy · workflows)", "path": "." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/coverage": true
+    },
+    "editor.formatOnSave": true,
+    "typescript.tsdk": "auth-service/node_modules/typescript/lib"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-azuretools.vscode-docker",
+      "github.vscode-github-actions",
+      "robocorp.robotframework-lsp",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "mongodb.mongodb-vscode"
+    ]
+  }
+}

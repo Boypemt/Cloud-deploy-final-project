@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: campusmart
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: product-service }
+  template:
+    metadata:
+      labels: { app: product-service }
+    spec:
+      containers:
+        - name: product-service
+          # Replace <dockerhub-user> and pin the released version tag
+          image: docker.io/<dockerhub-user>/campusmart-product-service:1.0.0
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: MONGO_URI
+              valueFrom: { secretKeyRef: { name: campusmart-secrets, key: PRODUCT_MONGO_URI } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: campusmart-secrets, key: JWT_SECRET } }
+            - name: INTERNAL_API_KEY
+              valueFrom: { secretKeyRef: { name: campusmart-secrets, key: INTERNAL_API_KEY } }
+            - name: SEED_PRODUCTS
+              valueFrom: { configMapKeyRef: { name: campusmart-config, key: SEED_PRODUCTS } }
+          readinessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: campusmart
+spec:
+  type: ClusterIP
+  selector: { app: product-service }
+  ports:
+    - port: 3002
+      targetPort: 3002

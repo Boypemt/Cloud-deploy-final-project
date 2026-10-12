@@ -1,0 +1,57 @@
+# Runs the RELEASED images from the container registry (no build).
+# Used by the release pipeline for post-deployment smoke tests, and for demos:
+#   REGISTRY=docker.io/<dockerhub-user> TAG=1.0.0 docker compose -f deploy/docker-compose.release.yml up -d
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me}
+  INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+
+services:
+  mongo:
+    image: mongo:7
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  auth-service:
+    image: ${REGISTRY:?set REGISTRY}/campusmart-auth-service:${TAG:-latest}
+    environment:
+      <<: *common-env
+      MONGO_URI: ${AUTH_MONGO_URI:-mongodb://mongo:27017/campusmart_auth}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  product-service:
+    image: ${REGISTRY}/campusmart-product-service:${TAG:-latest}
+    environment:
+      <<: *common-env
+      MONGO_URI: ${PRODUCT_MONGO_URI:-mongodb://mongo:27017/campusmart_products}
+      SEED_PRODUCTS: "true"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  order-service:
+    image: ${REGISTRY}/campusmart-order-service:${TAG:-latest}
+    environment:
+      <<: *common-env
+      MONGO_URI: ${ORDER_MONGO_URI:-mongodb://mongo:27017/campusmart_orders}
+      PRODUCT_SERVICE_URL: http://product-service:3002
+    depends_on:
+      product-service:
+        condition: service_healthy
+
+  web-frontend:
+    image: ${REGISTRY}/campusmart-web-frontend:${TAG:-latest}
+    ports:
+      - "8080:80"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy

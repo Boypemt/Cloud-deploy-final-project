@@ -1,0 +1,100 @@
+# CampusMart — full stack for local development, CI integration tests and demos.
+#   docker compose up -d --build        -> start everything, open http://localhost:8080
+#   docker compose ps                   -> status (all should be "healthy")
+#   docker compose logs -f order-service
+#   docker compose down -v              -> stop and wipe the database
+#
+# MongoDB runs as a container here ONLY for dev/CI. Production uses MongoDB Atlas
+# (see docs/DEPLOYMENT_PLAN.md) — exactly as taught in class.
+
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me}
+  INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  auth-service:            # owner: Bio
+    build: ./auth-service
+    environment:
+      <<: *common-env
+      PORT: 3001
+      MONGO_URI: mongodb://mongo:27017/campusmart_auth
+      ADMIN_EMAIL: admin@campusmart.local
+      ADMIN_PASSWORD: Admin@1234
+      DEMO_EMAIL: demo@campusmart.local
+      DEMO_PASSWORD: Demo@1234
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  product-service:         # owner: Por
+    build: ./product-service
+    environment:
+      <<: *common-env
+      PORT: 3002
+      MONGO_URI: mongodb://mongo:27017/campusmart_products
+      SEED_PRODUCTS: "true"
+    ports:
+      - "3002:3002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  order-service:           # owner: Fluke
+    build: ./order-service
+    environment:
+      <<: *common-env
+      PORT: 3003
+      MONGO_URI: mongodb://mongo:27017/campusmart_orders
+      PRODUCT_SERVICE_URL: http://product-service:3002
+    ports:
+      - "3003:3003"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+
+  web-frontend:            # owner: Bonus  (React app + nginx API gateway)
+    build: ./web-frontend
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      ORDER_SERVICE_URL: http://order-service:3003
+    ports:
+      - "8080:80"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+
+  qa-automation:           # owner: Pound  (only runs with: docker compose --profile test run --rm qa-automation)
+    build: ./qa-automation
+    profiles: ["test"]
+    environment:
+      BASE_URL: http://web-frontend
+    volumes:
+      - ./qa-automation/results:/qa/results
+    depends_on:
+      web-frontend:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

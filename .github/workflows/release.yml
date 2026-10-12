@@ -1,0 +1,135 @@
+# RELEASE PIPELINE (owner: Bio / PM)
+# Trigger: publish a GitHub Release with a SemVer tag, e.g. v1.0.0
+#   1. quality gate   — unit tests of every service must pass
+#   2. publish        — build 5 Docker images and push them to Docker Hub AND GitHub Container Registry
+#   3. verify         — pull the just-released images, start them, run the Smoke suite (post-deployment check)
+#
+# Required repository secrets (Settings > Secrets and variables > Actions):
+#   DOCKER_USERNAME  — Docker Hub username
+#   DOCKER_PASSWORD  — Docker Hub access token (Account settings > Personal access tokens)
+name: Release - publish Docker images
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish when running manually (e.g. 1.0.0-rc1)'
+        required: true
+        default: '0.0.0-manual'
+
+env:
+  VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.version }}
+
+jobs:
+  quality-gate:
+    name: Unit tests (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, product-service, order-service, web-frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ${{ matrix.service }}/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  publish:
+    name: Publish ${{ matrix.service }}
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: [auth-service, product-service, order-service, web-frontend, qa-automation]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lower-case owner name for GHCR
+        id: owner
+        run: echo "name=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/${{ secrets.DOCKER_USERNAME }}/campusmart-${{ matrix.service }}
+            ghcr.io/${{ steps.owner.outputs.name }}/campusmart-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ github.event.inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=sha,prefix=sha-
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ env.VERSION }}
+
+  verify-release:
+    name: Post-release smoke test
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start the RELEASED images (pulled from Docker Hub, not built)
+        env:
+          REGISTRY: docker.io/${{ secrets.DOCKER_USERNAME }}
+          TAG: ${{ github.event_name == 'release' && 'latest' || github.event.inputs.version }}
+        run: docker compose -f deploy/docker-compose.release.yml up -d --wait --wait-timeout 240
+
+      - name: Check the deployed version
+        run: curl -fsS http://localhost:8080/health/auth
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r qa-automation/requirements.txt
+
+      - name: Smoke tests against the released images
+        working-directory: qa-automation
+        env:
+          BASE_URL: http://localhost:8080
+        run: robot --outputdir results --include Smoke --exclude wip tests
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-smoke-report
+          path: qa-automation/results/

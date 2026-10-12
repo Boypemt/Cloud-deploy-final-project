@@ -1,0 +1,9 @@
+# Non-secret configuration shared by the services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campusmart-config
+  namespace: campusmart
+data:
+  PRODUCT_SERVICE_URL: http://product-service:3002
+  SEED_PRODUCTS: "true"

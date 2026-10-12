@@ -1,0 +1,42 @@
+# nginx = static web server for the React build + API gateway for the 3 backend services.
+# ${...} values are filled in from environment variables when the container starts
+# (official nginx image "templates" feature), so the same image works in docker-compose,
+# Kubernetes and Azure Container Apps — only the env vars change.
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # ---------- API gateway (path-based routing) ----------
+    location /api/auth/ {
+        proxy_pass ${AUTH_SERVICE_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    location /api/products {
+        proxy_pass ${PRODUCT_SERVICE_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    location /api/orders {
+        proxy_pass ${ORDER_SERVICE_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # ---------- Health checks (used by QA smoke tests & post-deploy verification) ----------
+    location = /health {
+        default_type application/json;
+        return 200 '{"status":"ok","service":"web-frontend"}';
+    }
+    location = /health/auth    { proxy_pass ${AUTH_SERVICE_URL}/health; }
+    location = /health/product { proxy_pass ${PRODUCT_SERVICE_URL}/health; }
+    location = /health/order   { proxy_pass ${ORDER_SERVICE_URL}/health; }
+
+    # ---------- React single-page app ----------
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

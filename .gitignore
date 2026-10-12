@@ -1,0 +1,27 @@
+# Dependencies & build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secrets — NEVER commit real connection strings / tokens
+.env
+.env.*
+!.env.example
+deploy/k8s/secret.yaml
+
+# Test output
+qa-automation/results/
+**/results/*.html
+**/results/*.xml
+**/results/*.png
+venv/
+.venv/
+__pycache__/
+
+# Editor / OS
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+npm-debug.log*

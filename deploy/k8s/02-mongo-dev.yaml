@@ -1,0 +1,32 @@
+# DEMO ONLY — a single MongoDB pod without persistent storage, so the cluster works offline.
+# In production databases are NOT run as containers; use MongoDB Atlas (see slides part 3).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-dev
+  namespace: campusmart
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mongo-dev }
+  template:
+    metadata:
+      labels: { app: mongo-dev }
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-dev
+  namespace: campusmart
+spec:
+  type: ClusterIP
+  selector: { app: mongo-dev }
+  ports:
+    - port: 27017
+      targetPort: 27017

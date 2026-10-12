@@ -1,0 +1,10 @@
+results
+venv
+.venv
+__pycache__
+*.pyc
+.git
+.vscode
+Dockerfile*
+.dockerignore
+README.md
