@@ -1,23 +1,27 @@
-import { Router, RequestHandler } from 'express';
+import { Router } from 'express';
+import {
+  changeStock,
+  createProduct,
+  deleteProduct,
+  getProduct,
+  listProducts,
+  updateProduct,
+} from '../controllers/product.controller';
+import { requireAdmin } from '../middleware/requireAdmin';
+import { requireAuth } from '../middleware/requireAuth';
+import { requireInternalKey } from '../middleware/requireInternalKey';
 
 /**
- * STUB ROUTES — they answer 501 until the real implementation is written.
- * The exact request/response format for each route is in docs/API_CONTRACT.md.
+ * Product routes — request/response format for each one is in docs/API_CONTRACT.md §4.
  * IMPORTANT: keep the route ORDER — specific paths before "/:id".
  */
-const notImplemented =
-  (route: string): RequestHandler =>
-  (_req, res) => {
-    res.status(501).json({ message: `${route} is not implemented yet (see product-service/README.md)` });
-  };
-
 const router = Router();
 
-router.get('/', notImplemented('GET /api/products'));
-router.get('/:id', notImplemented('GET /api/products/:id'));
-router.post('/', notImplemented('POST /api/products'));
-router.put('/:id', notImplemented('PUT /api/products/:id'));
-router.delete('/:id', notImplemented('DELETE /api/products/:id'));
-router.patch('/:id/stock', notImplemented('PATCH /api/products/:id/stock'));
+router.get('/', listProducts); // public
+router.patch('/:id/stock', requireInternalKey, changeStock); // order-service only
+router.get('/:id', getProduct); // public
+router.post('/', requireAuth, requireAdmin, createProduct);
+router.put('/:id', requireAuth, requireAdmin, updateProduct);
+router.delete('/:id', requireAuth, requireAdmin, deleteProduct);
 
 export default router;

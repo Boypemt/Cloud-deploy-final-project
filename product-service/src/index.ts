@@ -2,6 +2,7 @@ import dns from 'node:dns';
 import mongoose from 'mongoose';
 import { config } from './config';
 import { createApp } from './app';
+import { seedIfEnabled } from './seed';
 
 // Optional workaround for networks where MongoDB Atlas SRV lookups fail.
 if (process.env.DNS_SERVERS) {
@@ -17,7 +18,8 @@ async function start() {
   await mongoose.connect(config.mongoUri);
   console.log(`[${config.serviceName}] connected to MongoDB`);
 
-  // TODO (task P5 in README): seed demo products here when the collection is empty and SEED_PRODUCTS=true.
+  // Insert the demo products when the collection is empty and SEED_PRODUCTS=true (task P5).
+  await seedIfEnabled();
 
   createApp().listen(config.port, () => {
     console.log(`[${config.serviceName}] v${config.version} listening on http://localhost:${config.port}`);
