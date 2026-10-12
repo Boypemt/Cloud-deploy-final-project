@@ -21,6 +21,8 @@ npm test
 ```
 Need an admin token to try admin routes? Run auth-service too (`docker compose up -d auth-service`) and log in as `admin@campusmart.local / Admin@1234`, or sign one in a test with `jsonwebtoken` and the same `JWT_SECRET`.
 
+> ℹ️ The test scripts run Jest with `node --experimental-vm-modules`. **Keep this flag** — MongoDB driver 7 uses dynamic `import()`, which Jest blocks without it, and then every database connection fails with *"Missing required sub-document 'driver' in the client metadata document"*.
+
 ## Target structure
 ```
 product-service/src/

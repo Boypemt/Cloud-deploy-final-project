@@ -20,6 +20,8 @@ npm test                          # unit tests
 # PowerShell: $env:MONGO_URI_TEST="mongodb://127.0.0.1:27017/auth_test"; npm run test:int
 ```
 
+> ℹ️ The test scripts run Jest with `node --experimental-vm-modules`. **Keep this flag** — MongoDB driver 7 uses dynamic `import()`, which Jest blocks without it, and then every database connection fails with *"Missing required sub-document 'driver' in the client metadata document"*.
+
 ## Target structure
 ```
 auth-service/

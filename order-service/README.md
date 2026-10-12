@@ -21,6 +21,8 @@ npm test
 ```
 You don't need Por's code to be finished: unit tests use pure functions, and integration tests use a **stub product-service** (a tiny Express app started inside the test on a random port).
 
+> ℹ️ The test scripts run Jest with `node --experimental-vm-modules`. **Keep this flag** — MongoDB driver 7 uses dynamic `import()`, which Jest blocks without it, and then every database connection fails with *"Missing required sub-document 'driver' in the client metadata document"*.
+
 ## Target structure
 ```
 order-service/src/
