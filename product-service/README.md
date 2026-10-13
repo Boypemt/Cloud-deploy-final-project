@@ -3,9 +3,9 @@
 The **product catalog**: list, search, product detail, admin create/update/delete, and the internal stock endpoint that order-service uses.
 Contract: [`docs/API_CONTRACT.md` §1, §2, §4](../docs/API_CONTRACT.md#4-product-service-por--httplocalhost3002)
 
-## Current state (skeleton)
+## Current state
 ✅ Express app + `/health` · ✅ config from env · ✅ Dockerfile · ✅ Jest + Supertest · ✅ CI workflow `.github/workflows/ci-product.yml`
-⏳ All `/api/products` routes answer **501** until you implement them.
+✅ Tasks P1–P8 implemented: all `/api/products` routes follow API_CONTRACT §4 · 49 unit tests · 8 integration tests (incl. a 10-parallel-orders stock race test).
 
 ## Run it
 ```bash
@@ -48,6 +48,18 @@ product-service/src/
 | P8 | Integration tests IT-PROD-01..03 | `npm run test:int` green in CI |
 
 Rules: only edit `product-service/`. Keep route order (specific routes before `/:id`). Tell Fluke when P6 is merged and Pound when P2–P4 are merged.
+
+## Try it (curl)
+```bash
+curl "localhost:3002/api/products?search=pen&page=1&limit=5"
+curl localhost:3002/api/products/<id>
+# admin token (dev secret) — or log in through auth-service as admin@campusmart.local
+ADMIN=$(node -e "console.log(require('jsonwebtoken').sign({sub:'a',email:'admin@campusmart.local',name:'Admin',role:'admin'},'dev-only-secret-change-me'))")
+curl -X POST localhost:3002/api/products -H 'content-type: application/json' -H "Authorization: Bearer $ADMIN" \
+     -d '{"name":"Ruler","price":15,"stock":3,"category":"stationery"}'          # 201 (user token -> 403, none -> 401)
+curl -X PATCH localhost:3002/api/products/<id>/stock -H 'content-type: application/json' \
+     -H 'x-internal-key: dev-internal-key' -d '{"quantity":-2}'                 # 200, or 409 "Insufficient stock"
+```
 
 ## How to explain it in the presentation
 401 vs 403 · why stock uses one atomic `findOneAndUpdate` (two orders at the same time can't oversell) · your CI run · your image `campusmart-product-service` on Docker Hub.
