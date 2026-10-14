@@ -13,8 +13,8 @@ spec:
     spec:
       containers:
         - name: product-service
-          # Replace <dockerhub-user> and pin the released version tag
-          image: docker.io/<dockerhub-user>/campusmart-product-service:1.0.0
+          # Pin the released version tag (e.g. 0.1.0, 1.0.0)
+          image: docker.io/boypemt/campusmart-product-service:1.0.0
           ports:
             - containerPort: 3002
           env:
