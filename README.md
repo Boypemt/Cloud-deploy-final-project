@@ -53,8 +53,8 @@ flowchart LR
 ## 2. Get the code
 
 ```bash
-git clone https://github.com/<bio-github-user>/campusmart.git
-cd campusmart
+git clone https://github.com/Boypemt/Cloud-deploy-final-project.git
+cd Cloud-deploy-final-project
 code campusmart.code-workspace
 ```
 

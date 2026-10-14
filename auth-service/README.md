@@ -52,7 +52,7 @@ auth-service/
 | A6 | Unit tests UT-AUTH-01..03, integration tests IT-AUTH-01..02 | `npm test` and `npm run test:int` green in CI |
 
 ## Your PM tasks (checklist)
-- [ ] Create GitHub repo `campusmart`, push this folder structure, add Por/Fluke/Bonus/Pound as collaborators
+- [ ] Create GitHub repo `Cloud-deploy-final-project`, push this folder structure, add Por/Fluke/Bonus/Pound as collaborators
 - [ ] Add secrets `DOCKER_USERNAME`, `DOCKER_PASSWORD`; set Actions workflow permissions to *Read and write* ([PIPELINE.md §4](../docs/PIPELINE.md#4-one-time-setup-pm))
 - [ ] Protect `main` (PR + green checks)
 - [ ] Publish release **v0.1.0** on the skeleton → check 5 images on Docker Hub (proves the pipeline end-to-end on day 1)
