@@ -2,6 +2,7 @@ import dns from 'node:dns';
 import mongoose from 'mongoose';
 import { config } from './config';
 import { createApp } from './app';
+import { seedUsers } from './seed';
 
 // Optional workaround for networks where MongoDB Atlas SRV lookups fail.
 if (process.env.DNS_SERVERS) {
@@ -17,7 +18,9 @@ async function start() {
   await mongoose.connect(config.mongoUri);
   console.log(`[${config.serviceName}] connected to MongoDB`);
 
-  // TODO (task A4 in README): seed the admin and demo users here if they do not exist yet.
+  // Create the admin + demo users if they are missing (task A4) — idempotent, see seed.ts.
+  const seeded = await seedUsers();
+  if (seeded > 0) console.log(`[${config.serviceName}] seeded ${seeded} user(s)`);
 
   createApp().listen(config.port, () => {
     console.log(`[${config.serviceName}] v${config.version} listening on http://localhost:${config.port}`);

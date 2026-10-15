@@ -3,9 +3,10 @@
 Handles **register, login and JWT tokens** for CampusMart. Every other service trusts the tokens this service signs.
 Contract: [`docs/API_CONTRACT.md` §2–3](../docs/API_CONTRACT.md#2-authentication-jwt--shared-by-all-services)
 
-## Current state (skeleton)
-✅ Express app + `/health` · ✅ config from env · ✅ Dockerfile (multi-stage) · ✅ Jest + Supertest set up · ✅ CI workflow `ci-auth.yml`
-⏳ Routes `/api/auth/register`, `/login`, `/me` answer **501** until you implement them.
+## Current state
+✅ Express app + `/health` · ✅ config from env · ✅ Dockerfile (multi-stage) · ✅ Jest + Supertest · ✅ CI workflow `ci-auth.yml`
+✅ Tasks A1–A6 implemented: `/api/auth/register`, `/login`, `/me` follow API_CONTRACT §1–3 (the 501 stubs are gone) · admin + demo users seeded idempotently on start-up · 54 unit tests (UT-AUTH-01..03) · 11 integration tests (IT-AUTH-01..02 + 401/409/`$ne` security cases).
+✅ Token compatibility checked against product-service's real `requireAuth`: HS256, payload exactly `{ sub, email, name, role }`, `sub` = user id as a string.
 
 ## Run it
 ```bash
@@ -50,6 +51,28 @@ auth-service/
 | A4 | Seed admin + demo users on start-up (idempotent) | `demo@campusmart.local / Demo@1234` can log in after `docker compose up` |
 | A5 | `requireAuth` middleware + `GET /api/auth/me` | 401 without/invalid token |
 | A6 | Unit tests UT-AUTH-01..03, integration tests IT-AUTH-01..02 | `npm test` and `npm run test:int` green in CI |
+
+## Try it (curl)
+Through the gateway (`docker compose up -d`) use `localhost:8080`; against the service alone use `localhost:3001`.
+```bash
+# register -> 201 { user }  (409 if the email exists, 400 for bad input; role is always "user")
+curl -X POST localhost:8080/api/auth/register -H 'content-type: application/json' \
+     -d '{"name":"Bio","email":"bio@campusmart.local","password":"secret123"}'
+
+# login -> 200 { token, user }   (401 "Invalid email or password" for wrong email AND wrong password)
+TOKEN=$(curl -s -X POST localhost:8080/api/auth/login -H 'content-type: application/json' \
+     -d '{"email":"demo@campusmart.local","password":"Demo@1234"}' | sed -E 's/.*"token":"([^"]+)".*/\1/')
+
+# me -> 200 { user }   (401 without/with a bad token, 404 if the account was deleted)
+curl localhost:8080/api/auth/me -H "Authorization: Bearer $TOKEN"
+
+# the same token works on the other services (same JWT_SECRET, HS256)
+curl -X POST localhost:8080/api/products -H 'content-type: application/json' \
+     -H "Authorization: Bearer $TOKEN" -d '{"name":"Ruler","price":15,"stock":3,"category":"stationery"}'  # 403: demo is not admin
+```
+
+## How to explain it in the presentation
+Why bcrypt instead of storing passwords · why wrong email and wrong password give the **same** 401 (user enumeration) · why `{"$ne": null}` is a 400 and never reaches MongoDB (TC-SEC-001) · why the JWT payload is exactly `{ sub, email, name, role }` (product/order verify it themselves — no call back to auth) · why seeding is idempotent · your CI run and your image `campusmart-auth-service` on Docker Hub.
 
 ## Your PM tasks (checklist)
 - [ ] Create GitHub repo `Cloud-deploy-final-project`, push this folder structure, add Por/Fluke/Bonus/Pound as collaborators

@@ -33,6 +33,11 @@ export function createApp() {
 
   // Last-resort error handler (Express 5 forwards async errors here automatically)
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+    // express.json() could not parse the body → the client's fault, so 400 (API_CONTRACT §1)
+    if (err?.type === 'entity.parse.failed') {
+      res.status(400).json({ message: 'Invalid JSON body' });
+      return;
+    }
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   };
