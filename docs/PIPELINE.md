@@ -71,7 +71,7 @@ Each micro-service builds only when its own folder changes — a change in `orde
    - `DOCKER_PASSWORD` = the token from step 2
 4. GitHub → Settings → Actions → General → Workflow permissions → **Read and write** (lets `GITHUB_TOKEN` push to GHCR).
 5. GitHub → Settings → Branches → add rule for `main`: require PR, require status checks (`Build & test`, `System tests on docker compose`).
-6. After the first release: Docker Hub repos appear automatically (`<user>/campusmart-*`); on GitHub the packages appear under your profile → Packages (set visibility to public if the teacher needs to pull them).
+6. After the first release: Docker Hub repos appear automatically (`boypemt/campusmart-*`); on GitHub the packages appear under your profile → Packages (set visibility to public if the teacher needs to pull them).
 
 ## 5. How to make a release (PM)
 

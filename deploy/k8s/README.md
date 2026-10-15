@@ -7,7 +7,7 @@ kubectl apply -f deploy/k8s/00-namespace.yaml -f deploy/k8s/01-config.yaml
 kubectl apply -f deploy/k8s/secret.yaml
 # 3) (demo only) in-cluster MongoDB — skip if you use MongoDB Atlas
 kubectl apply -f deploy/k8s/02-mongo-dev.yaml
-# 4) the 4 services (edit <dockerhub-user> and the version tag first)
+# 4) the 4 services (set the version tag first)
 kubectl apply -f deploy/k8s/10-auth-service.yaml -f deploy/k8s/11-product-service.yaml \
               -f deploy/k8s/12-order-service.yaml -f deploy/k8s/13-web-frontend.yaml
 
@@ -22,6 +22,6 @@ Useful for the demo (matches the K8s lecture):
 |---|---|
 | Scaling | `kubectl scale deployment product-service -n campusmart --replicas=4` |
 | Self-healing | `kubectl delete pod -n campusmart -l app=auth-service` → new pods appear |
-| Rolling update | `kubectl set image deployment/auth-service auth-service=docker.io/<user>/campusmart-auth-service:1.1.0 -n campusmart` |
+| Rolling update | `kubectl set image deployment/auth-service auth-service=docker.io/boypemt/campusmart-auth-service:1.1.0 -n campusmart` |
 | Rollback | `kubectl rollout undo deployment/auth-service -n campusmart` |
 | Logs | `kubectl logs -n campusmart -l app=order-service --tail=50` |

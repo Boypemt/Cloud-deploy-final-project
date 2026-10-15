@@ -87,7 +87,7 @@ Rules: `.env` files are git-ignored and docker-ignored; only `.env.example` is c
 docker compose up -d --build      # build from source
 open http://localhost:8080
 # or run the released images:
-REGISTRY=docker.io/<dockerhub-user> TAG=1.0.0 docker compose -f deploy/docker-compose.release.yml up -d
+REGISTRY=docker.io/boypemt TAG=1.0.0 docker compose -f deploy/docker-compose.release.yml up -d
 ```
 
 ### 6.2 Showcase — ngrok (lecture "4 for showcase")

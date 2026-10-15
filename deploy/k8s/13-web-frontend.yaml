@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: web-frontend
-          image: docker.io/<dockerhub-user>/campusmart-web-frontend:1.0.0
+          image: docker.io/boypemt/campusmart-web-frontend:1.0.0
           ports:
             - containerPort: 80
           # Upstream URLs default to the K8s Service names above (set in the Dockerfile)
