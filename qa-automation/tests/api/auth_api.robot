@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation     API tests for auth-service (US-01 register, US-02 login).
-...               Tag "wip" = feature not merged yet -> excluded in CI. Remove "wip" when the feature lands.
+...               All of these run in CI — auth-service is merged, so no test here is excluded any more.
 Resource          ../../resources/api_keywords.robot
 Suite Setup       Create Gateway Session
 

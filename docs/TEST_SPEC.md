@@ -102,31 +102,32 @@ Format follows the lecture's test case table (ID · description · Req/AC · exp
 
 | Test Case ID | Description | Req / AC | Level | Pre-condition | Steps & test data | Expected result | Tags | Status |
 |---|---|---|---|---|---|---|---|---|
-| TC-HEALTH-001 | Gateway is up | US-07 AC-01 | System | Stack running | GET `/health` | 200, `status=ok` | Smoke API | Pass (skeleton) |
-| TC-HEALTH-002..004 | Auth / product / order healthy | US-07 AC-01 | System | Stack running | GET `/health/auth`, `/health/product`, `/health/order` | 200, correct `service`, `db=up` | Smoke API | Pass (skeleton) |
-| TC-UI-HOME-001 | Web app loads | US-07 | E2E | Stack running | open `/login` | title = `CampusMart` | Smoke UI | Pass (skeleton) |
-| TC-AUTH-001 | Register with valid data | US-01 AC-01 | API | — | POST `/api/auth/register` unique email, password `secret123` | 201, `user.email` = input, no `password` field | API Positive | |
-| TC-AUTH-002 | Register duplicate email | US-01 AC-02 | API | TC-AUTH-001 user exists | same body again | 409 + message | API Negative | |
-| TC-AUTH-003 | Register invalid input | US-01 AC-03 | API | — | email `abc`, password `123` | 400 + message | API Negative | |
-| TC-LOGIN-001 | Login valid credentials | US-02 AC-01 | API | seed demo user | POST `/api/auth/login` demo / `Demo@1234` | 200, has `token`, `user.email` | API Smoke Critical | wip |
-| TC-LOGIN-002 | Login wrong password | US-02 AC-02 | API | seed demo user | demo / `wrong-password` | 401 + message | API Negative | wip |
-| TC-LOGIN-003 | Protected endpoint without token | US-02 AC-03 | API | — | GET `/api/auth/me` no header; then with `Bearer abc` | 401 both | API Security | |
-| TC-LOGIN-DD | Data-driven login (CSV) | US-02 | API | seed | rows in `data/login_cases.csv` | status per row | API Regression | wip |
-| TC-SEC-001 | NoSQL injection on login | US-02 | API | — | body `{"email":{"$ne":null},"password":{"$ne":null}}` | NOT 200 (expect 400) | API Security | |
-| TC-PROD-001 | List products | US-03 AC-01 | API | seed products | GET `/api/products` | 200, `total ≥ 8`, contains "CMU Notebook A5" | API Smoke | |
-| TC-PROD-002 | Search products | US-03 AC-02 | API | seed | GET `/api/products?search=notebook` | every item name contains "notebook" (any case) | API | |
-| TC-PROD-003 | Unknown product id | US-03 AC-03 | API | — | GET `/api/products/000000000000000000000000` | 404 | API Negative | |
-| TC-PROD-004 | Normal user cannot create product | US-04 AC-02 | API | demo token | POST `/api/products` | 403 | API Security | |
-| TC-PROD-005 | Admin creates & deletes product | US-04 AC-01 | API | admin token | POST then DELETE | 201 then 200 | API Positive | |
-| TC-ORD-001 | Order with WELCOME10 | US-05 AC-01, AC-04 | API | demo token, product "CMU Notebook A5" (45) | POST `/api/orders` 2 × notebook, code `WELCOME10` | 201, subtotal 90, discount 9, total 81; product stock −2 | API Critical | |
-| TC-ORD-002 | Invalid discount code | US-05 AC-02 | API | demo token | quote with code `FAKE` | 400 "Invalid discount code" | API Negative | |
-| TC-ORD-003 | Insufficient stock | US-05 AC-03 | API | "Limited Edition Mug" stock 2 | order quantity 5 | 409 | API Negative | |
-| TC-ORD-004 | Cancel order restores stock | US-06 AC-02 | API | order from TC-ORD-001 | PATCH `/api/orders/:id/cancel` | 200, status CANCELLED, stock back | API | |
-| TC-ORD-005 | Cannot read another user's order | US-06 AC-03 | API | order of demo; new user token | GET `/api/orders/:id` as new user | 404 | API Security | |
-| TC-UI-LOGIN-001 | Login through UI | US-02 AC-01 | E2E | seed | type demo creds in `#login-email/#login-password`, click `#login-submit` | URL `/products`, `#product-list` visible, `#nav-user` contains "Demo" | UI Smoke Critical | wip |
-| TC-UI-LOGIN-002 | Wrong password in UI | US-02 AC-02 | E2E | seed | wrong password | `#login-error` visible, still on `/login` | UI Negative | |
-| TC-UI-CART-001 | Add to cart and checkout | US-05 | E2E | logged in | add "Blue Gel Pen (3-pack)" → `/cart` → code `WELCOME10` → `#checkout-button` | `#order-success` visible; order appears in `/orders` | UI Critical | |
-| TC-UI-LOGOUT-001 | Logout | US-02 AC-04 | E2E | logged in | click `#nav-logout`, open `/products` | redirected to `/login` | UI | |
+| TC-HEALTH-001 | Gateway is up | US-07 AC-01 | System | Stack running | GET `/health` | 200, `status=ok` | Smoke API | Pass |
+| TC-HEALTH-002..004 | Auth / product / order healthy | US-07 AC-01 | System | Stack running | GET `/health/auth`, `/health/product`, `/health/order` | 200, correct `service`, `db=up` | Smoke API | Pass |
+| TC-UI-HOME-001 | Web app loads | US-07 | E2E | Stack running | open `/login` | title = `CampusMart` | Smoke UI | Pass |
+| TC-AUTH-001 | Register with valid data | US-01 AC-01 | API | — | POST `/api/auth/register` unique email, password `secret123` | 201, `user.email` = input, no `password` field | API Positive | Pass |
+| TC-AUTH-002 | Register duplicate email | US-01 AC-02 | API | TC-AUTH-001 user exists | same body again | 409 + message | API Negative | Pass |
+| TC-AUTH-003 | Register invalid input | US-01 AC-03 | API | — | email `abc`, password `123` | 400 + message | API Negative | Pass |
+| TC-LOGIN-001 | Login valid credentials | US-02 AC-01 | API | seed demo user | POST `/api/auth/login` demo / `Demo@1234` | 200, has `token`, `user.email` | API Smoke Critical | Pass |
+| TC-LOGIN-002 | Login wrong password | US-02 AC-02 | API | seed demo user | demo / `wrong-password` | 401 + message | API Negative | Pass |
+| TC-LOGIN-003 | Protected endpoint without token | US-02 AC-03 | API | — | GET `/api/auth/me` no header; then with `Bearer abc` | 401 both | API Security | Pass |
+| TC-LOGIN-DD | Data-driven login (CSV) | US-02 | API | seed | rows in `data/login_cases.csv` | status per row | API Regression | Pass (8 rows) |
+| TC-SEC-001 | NoSQL injection on login | US-02 | API | — | body `{"email":{"$ne":null},"password":{"$ne":null}}` | NOT 200 (expect 400) | API Security | Pass |
+| TC-PROD-001 | List products | US-03 AC-01 | API | seed products | GET `/api/products` | 200, `total ≥ 8`, contains "CMU Notebook A5" | API Smoke | Pass |
+| TC-PROD-002 | Search products | US-03 AC-02 | API | seed | GET `/api/products?search=notebook` | every item name contains "notebook" (any case) | API | Pass |
+| TC-PROD-003 | Unknown product id | US-03 AC-03 | API | — | GET `/api/products/000000000000000000000000` | 404 | API Negative | Pass |
+| TC-PROD-004 | Normal user cannot create product | US-04 AC-02 | API | demo token | POST `/api/products` | 403 | API Security | Pass |
+| TC-PROD-005 | Admin creates & deletes product | US-04 AC-01 | API | admin token | POST then DELETE | 201 then 200 | API Positive | Pass |
+| TC-ORD-001 | Order with WELCOME10 | US-05 AC-01, AC-04 | API | demo token, product "CMU Notebook A5" (45) | POST `/api/orders` 2 × notebook, code `WELCOME10`; cancel it again at the end | 201, subtotal 90, discount 9, total 81; product stock −2 | API Critical | Pass |
+| TC-ORD-002 | Invalid discount code | US-05 AC-02 | API | demo token | quote with code `FAKE` | 400 "Invalid discount code" | API Negative | Pass |
+| TC-ORD-003 | Insufficient stock | US-05 AC-03 | API | "Limited Edition Mug" stock 2 | order quantity 5 | 409 | API Negative | Pass |
+| TC-ORD-004 | Cancel order restores stock | US-06 AC-02 | API | demo token (places its own order, independent of TC-ORD-001) | POST `/api/orders` 2 × notebook, then PATCH `/api/orders/:id/cancel` | 200, status CANCELLED, stock back +2 | API | Pass |
+| TC-ORD-005 | Cannot read another user's order | US-06 AC-03 | API | order of demo; new user token | GET `/api/orders/:id` as new user; cancel the order at the end | 404 | API Security | Pass |
+| TC-ORD-006 | Blank discount code means no discount | US-05 AC-01 | API | demo token, product "Blue Gel Pen (3-pack)" (35) | POST `/api/orders` 1 × pen with `discountCode: ""`; cancel it again at the end | 201, discount 0, `discountCode` null, total = subtotal | API Positive Regression | Pass |
+| TC-UI-LOGIN-001 | Login through UI | US-02 AC-01 | E2E | seed | type demo creds in `#login-email/#login-password`, click `#login-submit` | URL `/products`, `#product-list` visible, `#nav-user` contains "Demo" | UI Smoke Critical | Pass |
+| TC-UI-LOGIN-002 | Wrong password in UI | US-02 AC-02 | E2E | seed | wrong password | `#login-error` visible, still on `/login` | UI Negative | Pass |
+| TC-UI-CART-001 | Add to cart and checkout | US-05 | E2E | logged in | add "Blue Gel Pen (3-pack)" → `/cart` → code `WELCOME10` → `#apply-discount` → `#checkout-button`; cancel the order through the API at the end | `#cart-discount` non-zero, `#order-success` visible; `.order-row` appears in `/orders` | UI Critical | Pass |
+| TC-UI-LOGOUT-001 | Logout | US-02 AC-04 | E2E | logged in | click `#nav-logout`, open `/products` | redirected to `/login` | UI | Pass |
 | TC-PERF-001 *(optional)* | 100 users for 30 s | non-functional | Performance | stack running | `npx autocannon -c 100 -d 30 http://localhost:8080/api/products` | no errors, p99 < 1 s | Perf | |
 
 ---
