@@ -5,8 +5,8 @@ They run in GitHub Actions on every push to `main` and every PR (`.github/workfl
 
 Your inputs from the PM: [`docs/TEST_SPEC.md`](../docs/TEST_SPEC.md) (test cases) and [`docs/API_CONTRACT.md`](../docs/API_CONTRACT.md) (endpoints + UI element ids).
 
-## Current state (skeleton)
-✅ Folder structure, shared keywords & variables · ✅ **Smoke tests passing on the skeleton** (TC-HEALTH-001..004, TC-UI-HOME-001) · ✅ examples: TC-LOGIN-001/002 (API), TC-UI-LOGIN-001 (UI), data-driven login from CSV — tagged `wip` until the features are merged · ✅ Dockerfile (Python + Chromium) · ✅ CI workflow `e2e.yml`
+## Current state (v1.0.0 — suite complete)
+✅ All 4 services + the web frontend are merged, so **no test is tagged `wip` any more** · ✅ 35 tests green: TC-HEALTH-001..004, TC-AUTH-001..003, TC-LOGIN-001..003 + TC-LOGIN-DD (8 CSV rows), TC-SEC-001, TC-PROD-001..005, TC-ORD-001..006, TC-UI-HOME-001, TC-UI-LOGIN-001/002, TC-UI-CART-001, TC-UI-LOGOUT-001 · ✅ every test places and cleans up its own data, so the whole suite can run twice in a row with the same result · ✅ Dockerfile (Python + Chromium) · ✅ CI workflow `e2e.yml`
 
 ```
 qa-automation/
@@ -32,7 +32,7 @@ python -m venv venv
 venv\Scripts\activate            # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
 # 3) run
-robot -d results --exclude wip tests            # all ready tests
+robot -d results tests                          # the whole suite (nothing is excluded any more)
 robot -d results -i Smoke tests                 # only smoke
 robot -d results -i US-02 tests                 # one user story
 .\run_tests.ps1 -Tag Smoke                      # same, Windows helper
@@ -42,7 +42,7 @@ UI tests use Chrome. To *watch* the browser instead of headless: `$env:HEADLESS=
 Alternative without Python: `docker compose --profile test run --rm qa-automation` (results in `qa-automation/results/`).
 
 ## The `wip` tag workflow
-A test for a feature that is not merged yet is tagged `wip` → CI skips it (`--exclude wip`). When a developer tells you their feature is merged, remove `wip`, run locally, push. Goal for v1.0.0: **no `wip` left**.
+A test for a feature that is not merged yet is tagged `wip` → CI skips it (`--exclude wip`). When a developer tells you their feature is merged, remove `wip`, run locally, push. Goal for v1.0.0: **no `wip` left** — ✅ reached, `grep -r wip tests/ resources/` returns nothing. `--exclude wip` stays in the helper scripts so the workflow still works if we park a test again.
 
 ## Your tasks
 
