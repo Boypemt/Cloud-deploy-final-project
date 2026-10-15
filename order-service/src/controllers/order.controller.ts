@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
+import { HydratedDocument } from 'mongoose';
 import { changeStock, getProduct, ProductSnapshot } from '../clients/productClient';
-import { Order } from '../models/Order';
+import { Order, OrderDoc } from '../models/Order';
 import { HttpError } from '../utils/httpError';
 import { calculateTotals, mergeItems, PricedItem } from '../utils/pricing';
 import { isObjectIdString, validateOrderInput } from '../utils/validation';
@@ -58,7 +59,15 @@ export const createOrder: RequestHandler = async (req, res) => {
     throw error;
   }
 
-  const order = await Order.create({ userId: req.user!.sub, items, ...totals, status: 'PLACED' });
+  let order: HydratedDocument<OrderDoc>;
+  try {
+    order = await Order.create({ userId: req.user!.sub, items, ...totals, status: 'PLACED' });
+  } catch (error) {
+    // The stock is already reserved but no order exists to justify it, so it would stay reserved
+    // forever. Put every reserved item back (best effort) and still report the original save error.
+    await Promise.allSettled(reserved.map((item) => changeStock(item.productId, item.quantity, item.name)));
+    throw error;
+  }
   res.status(201).json(order);
 };
 
@@ -83,9 +92,15 @@ export const cancelOrder: RequestHandler<{ id: string }> = async (req, res) => {
   const order = await findOwnedOrder(req.params.id, req.user!.sub);
   if (order.status !== 'PLACED') throw new HttpError(409, 'Only PLACED orders can be cancelled');
 
-  for (const item of order.items) {
-    await changeStock(item.productId, item.quantity, item.name);
+  // All or nothing: if any put-back fails we keep the order PLACED and answer 502, so the stock
+  // never ends up half-restored and the user can safely cancel again once product-service is back.
+  const restored = await Promise.allSettled(
+    order.items.map((item) => changeStock(item.productId, item.quantity, item.name)),
+  );
+  if (restored.some((result) => result.status === 'rejected')) {
+    throw new HttpError(502, 'Product service unavailable');
   }
+
   order.status = 'CANCELLED';
   await order.save();
   res.json(order);

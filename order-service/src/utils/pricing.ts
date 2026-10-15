@@ -28,18 +28,17 @@ export function calculateSubtotal(items: PricedItem[]): number {
   return roundMoney(items.reduce((sum, item) => sum + item.price * item.quantity, 0));
 }
 
+/** A missing or blank code (the web cart sends "" for an empty box) means "no discount". */
 export function normalizeDiscountCode(code: string | null | undefined): string | null {
   if (code === null || code === undefined) return null;
-  return code.trim().toUpperCase();
+  const normalized = code.trim().toUpperCase();
+  return normalized === '' ? null : normalized;
 }
 
 /** Returns only the discount amount; controllers store the normalised code separately. */
 export function applyDiscount(subtotal: number, code: string | null | undefined): number {
   const normalized = normalizeDiscountCode(code);
-  if (!normalized) {
-    if (code !== null && code !== undefined) throw new HttpError(400, 'Invalid discount code');
-    return 0;
-  }
+  if (normalized === null) return 0;
   if (normalized === 'WELCOME10') return roundMoney(Math.min(subtotal, subtotal * 0.1));
   if (normalized === 'CAMPUS50') {
     if (subtotal < 300) throw new HttpError(400, 'Discount requires subtotal of at least 300');
