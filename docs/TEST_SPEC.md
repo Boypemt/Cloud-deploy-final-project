@@ -145,13 +145,66 @@ Format follows the lecture's test case table (ID · description · Req/AC · exp
 ## 7. Defect reporting
 Bugs are GitHub **Issues** with label `bug` + severity label (`critical` / `major` / `minor`). Title format: `[TC-ORD-001] total is 90 instead of 81`. Include: steps, expected, actual, CI run link / Robot `log.html` screenshot. The developer who owns the service fixes it in a branch `fix/<issue-number>-short-name`; the tester re-runs and closes.
 
-## 8. Test closure (fill in before submission)
+## 8. Test closure
+
+Final results for release **v1.0.0** (all 5 projects merged, full stack started with `docker compose up --build`).
+
+### 8.1 Summary
 
 | Metric | Value |
 |---|---|
-| Total test cases | |
-| Executed | |
-| Pass / Fail / Blocked | |
-| Unit tests (Jest + Vitest) passing | |
-| Defects raised / closed / open | |
-| Lessons learned | |
+| Total automated tests | **212** = 150 unit + 27 integration + 35 system/E2E |
+| Executed | 212 (100%) |
+| Pass / Fail / Blocked | **212 / 0 / 0** |
+| Unit tests (Jest + Vitest) passing | 150 / 150 |
+| Robot Framework suite | 35 / 35 passed — run twice in a row on the same database, both 100% green (repeatable); stock returned to its seed values after each run |
+| `wip` tests left | 0 |
+| Defects raised / closed / open | **8 / 8 / 0** (+1 known limitation, accepted — see 8.4) |
+| Exit criteria (§2.4) | ✅ 100% UT/IT pass · ✅ 100% Smoke + Critical pass · ✅ 100% of Robot tests pass · ✅ no open Critical defect → **release approved** |
+
+### 8.2 Results by test level and project
+
+| Level | Tool | auth-service | product-service | order-service | web-frontend | Total | Result |
+|---|---|---|---|---|---|---|---|
+| Unit (UT) | Jest / Vitest | 54 | 52 | 17 | 27 | **150** | all pass |
+| Integration (IT, real MongoDB) | Jest + Supertest | 12 | 8 | 7 | — | **27** | all pass |
+| System / API / E2E | Robot Framework | — | — | — | — | **35** | all pass |
+
+Robot Framework results by tag (one test can have several tags):
+
+| Tag | Pass | | Tag | Pass |
+|---|---|---|---|---|
+| API | 30 | | US-01 Register | 3 |
+| UI (browser E2E) | 5 | | US-02 Login / logout | 15 |
+| Smoke | 8 | | US-03 Browse products | 3 |
+| Critical | 4 | | US-04 Admin products | 2 |
+| Security | 4 | | US-05 Cart & order | 5 |
+| Positive | 11 | | US-06 Order history / cancel | 2 |
+| Negative | 7 | | US-07 Deployment check | 5 |
+| Regression | 9 | | **Fail** | **0** |
+
+Every user story US-01…US-07 is covered by at least 2 passing test cases (traceability, §1).
+
+### 8.3 Defects found and fixed
+
+| ID | Found by / in | Severity | Description | Fix | Status |
+|---|---|---|---|---|---|
+| D-01 | CI · auth, product, order | Critical | Every integration test failed in GitHub Actions: `Missing required sub-document 'driver' in the client metadata document`. MongoDB driver 7 uses dynamic `import()`, which Jest's sandbox blocks, so the driver sent an empty handshake that MongoDB rejected | Run Jest with `node --experimental-vm-modules` in the test scripts; CI also waits for a healthy MongoDB and uses `127.0.0.1` | Closed |
+| D-02 | Review · product-service | Minor | A malformed JSON body returned 500 instead of 400 | `entity.parse.failed` → `400 Invalid JSON body` | Closed |
+| D-03 | Review · order-service | Major | A blank discount code (`""`, sent by an empty discount box) was rejected with 400, so checkout without a code would fail | Blank code = no discount; covered by TC-ORD-006 | Closed |
+| D-04 | Review · order-service | Minor | A malformed JSON body returned 500 instead of 400 | Same fix as D-02 | Closed |
+| D-05 | Review · order-service | Major | If saving an order failed after stock was reserved, the stock was never given back | Roll back every reserved item, then return the original error; integration test added | Closed |
+| D-06 | Review · order-service | Major | Cancelling could restore only part of the stock if product-service failed halfway | All-or-nothing: order stays `PLACED`, `502`, cancel can be retried safely; integration test added | Closed |
+| D-07 | Local run · docker compose | Minor (environment) | Stack would not start when another MongoDB container already used port 27017; a half-started stack then failed with `ENOTFOUND mongo` | Documented in the README: stop the other container, `docker compose down --remove-orphans`, `up` again | Closed |
+| D-08 | Robot · E2E (test side) | Minor | TC-UI-CART-001 clicked at a stale position because of smooth scrolling and the product-card hover animation | Reusable keyword `Click Element When Still` (instant scroll + retry); no product code change needed | Closed |
+
+### 8.4 Known limitation (accepted for v1.0.0)
+If a product is **deleted** while an order containing it is still `PLACED`, cancelling that order returns `502` and the order stays `PLACED` (the stock cannot be put back on a product that no longer exists). Chosen on purpose: keeping the order consistent is safer than silently losing stock. Rare in practice; would be handled by an admin in a later version.
+
+### 8.5 Lessons learned
+1. **One shared API contract** (`docs/API_CONTRACT.md`) let 4 people build 4 services in parallel; all services worked together the first time they ran in one stack.
+2. **Integration tests against a real database find problems unit tests cannot** — D-01 only appeared with a real MongoDB in CI.
+3. **Tag-based test status (`wip`)** let the tester write every test early and switch them on as features were merged, without ever breaking CI.
+4. **Small PRs + required CI + review** caught D-02…D-06 before they reached `main`.
+5. **Post-release smoke tests on the published images** prove the artifact on Docker Hub works, not just the source code.
+6. Environment issues (ports, line endings, leftover containers) cost more time than code bugs — documenting the fix in the README saved the rest of the team from repeating them.
