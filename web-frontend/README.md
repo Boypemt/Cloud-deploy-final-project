@@ -4,8 +4,10 @@ The **web app users see** (React + Vite + TypeScript), including the **Login pag
 In Docker it is served by **nginx**, which is also the **API gateway**: it forwards `/api/auth`, `/api/products`, `/api/orders` to the right service.
 Contract: [`docs/API_CONTRACT.md` §3–6](../docs/API_CONTRACT.md#6-frontend-fluke--routes-and-element-ids) — the **element ids in §6 are used by Pound's Robot tests; do not rename them.**
 
-## Current state (skeleton)
-✅ Vite + React + TS + React Router · ✅ routes `/login /register /products /cart /orders` (placeholder pages) · ✅ `src/api/client.ts` (fetch wrapper with Bearer token & error handling) · ✅ nginx gateway config `nginx/default.conf.template` · ✅ multi-stage Dockerfile · ✅ Vitest · ✅ CI workflow `.github/workflows/ci-frontend.yml`
+## Implemented (Bonus delivery)
+F1–F9 completed, plus F10 admin Add product. Typed service API clients, authenticated route guard,
+persistent cart, server quotes, checkout and order cancellation are implemented.
+Required Robot Framework selectors and existing Docker/nginx/Vite proxy configuration are retained.
 
 ## Run it
 ```bash
@@ -53,54 +55,26 @@ Login flow (form → `/api/auth/login` → token saved → protected routes) · 
 
 ---
 
-## 🤖 AI prompt (Claude Code / Copilot Chat / ChatGPT)
+## Implementation map
 
-Run your AI tool from the **repo root**, then paste:
+- F1–F3: `src/context/AuthContext.tsx`, `src/components/ProtectedRoute.tsx`, `src/api/client.ts`, login/register pages.
+- F4: `src/components/Navbar.tsx`.
+- F5/F10: `src/pages/ProductsPage.tsx`, `src/components/ProductCard.tsx`, `src/api/products.ts`.
+- F6/F7: `src/utils/cart.ts`, `src/context/CartContext.tsx`, `src/pages/CartPage.tsx`, `src/api/orders.ts`.
+- F8: `src/pages/OrdersPage.tsx`.
+- F9: `tests/validation.test.ts`, `tests/cart.test.ts`; additional API session tests in `tests/client.test.ts`.
 
-```text
-You are working in the CampusMart mono-repo (micro-services, university Software Deployment course).
-I am Bonus and I own ONLY the folder web-frontend/ (React 19 + Vite + TypeScript + React Router 7,
-served by nginx in Docker). Do not modify files outside web-frontend/.
+Cart supports at most 20 distinct products and 99 units per product, matching the order contract.
+Checkout waits for a quote matching current cart and applied code. An edited discount code must
+be applied before checkout. Prices and discounts are always calculated by order-service.
+All API 401 responses notify AuthContext, clearing token/cart and causing the protected route to redirect.
 
-Read first:
-- docs/API_CONTRACT.md — sections 3, 4 and 5 (the backend APIs I call) and section 6 (my spec:
-  routes, REQUIRED element ids/classes used by Robot Framework E2E tests, localStorage keys,
-  behaviour). Use the ids EXACTLY as written.
-- docs/TEST_SPEC.md (UT-WEB-01..03 and the TC-UI-* cases my pages must pass)
-- web-frontend/README.md (tasks F1–F10, target structure)
-- web-frontend/src/* (keep src/api/client.ts apiFetch + TOKEN_KEY, keep vite.config.ts proxy,
-  keep nginx/ and Dockerfile unchanged)
+Login flow: validate form → POST `/api/auth/login` → save token in `campusmart_token` →
+load `/api/auth/me` → redirect to `/products`; future API calls attach the Bearer token.
 
-Implement tasks F1–F9 (F10 if time allows):
-1. src/api/auth.ts, products.ts, orders.ts — typed functions on top of apiFetch (types for User,
-   Product, Order, Quote matching the contract). Always relative URLs (/api/...).
-2. src/context/AuthContext.tsx — login(email, password), register(...), logout(), user, token;
-   loads the user with GET /api/auth/me on start if a token exists; any ApiError with status 401
-   logs out.
-3. src/context/CartContext.tsx + src/utils/cart.ts (pure functions addToCart, removeFromCart,
-   updateQuantity, cartCount, toOrderItems) persisted in localStorage "campusmart_cart".
-4. src/utils/validation.ts — validateLoginForm({ email, password }) → errors object.
-5. Components: Navbar (#nav-user, #nav-cart-count, #nav-logout), ProtectedRoute, ProductCard.
-6. Pages:
-   - LoginPage (#login-email, #login-password, #login-submit, #login-error, link to /register;
-     on success navigate to /products)
-   - RegisterPage (#register-name, #register-email, #register-password, #register-submit,
-     #register-error, #register-success)
-   - ProductsPage (#product-search with debounce, #product-list, .product-card[data-product-id]
-     containing .product-name, .product-price (use formatPrice), .add-to-cart)
-   - CartPage (#cart-items, .cart-item, quantity +/-, #discount-code, #apply-discount,
-     #cart-subtotal, #cart-discount, #cart-total from POST /api/orders/quote, #checkout-button →
-     POST /api/orders → #order-success and clear cart; errors in #cart-error)
-   - OrdersPage (#order-list, .order-row[data-order-id], .order-status, .cancel-order for PLACED)
-   Protect /products, /cart, /orders with ProtectedRoute.
-7. Vitest tests in tests/: validation.test.ts (UT-WEB-01), cart.test.ts (UT-WEB-02, UT-WEB-03).
-   Keep tests/format.test.ts passing.
-8. Simple, clean responsive CSS in src/styles.css (no UI library needed). Show loading and error
-   states. Escape nothing manually — React already escapes text (never use dangerouslySetInnerHTML).
+Backend endpoints are still skeletons in the source revision used for this delivery. Full end-to-end
+flows require Bio, Por and Fluke to implement their services; frontend unit/build checks can run independently.
 
-Constraints: TypeScript strict, no `any`, function components + hooks, readable code with short
-comments (I must explain it in a presentation). No new dependencies unless really needed.
 
-Finish by running in web-frontend/: npm run build and npm test, fix until green. Then explain the
-login flow and list which file implements each task.
-```
+## UI refresh
+CampusMart purple/cream storefront, responsive product grid, original SVG product illustrations, category API filters and consistent shared page styling. Google Fonts fall back to system fonts offline. The isolated preview server is not included in this production source package.
