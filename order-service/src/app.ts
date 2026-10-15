@@ -3,6 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import { config } from './config';
 import orderRoutes from './routes/order.routes';
+import { HttpError } from './utils/httpError';
 
 /**
  * Builds the Express app WITHOUT starting it, so tests can use supertest
@@ -33,6 +34,10 @@ export function createApp() {
 
   // Last-resort error handler (Express 5 forwards async errors here automatically)
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+    if (err instanceof HttpError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   };
