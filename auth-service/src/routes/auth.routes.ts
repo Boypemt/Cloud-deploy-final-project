@@ -1,20 +1,15 @@
-import { Router, RequestHandler } from 'express';
+import { Router } from 'express';
+import { login, me, register } from '../controllers/auth.controller';
+import { requireAuth } from '../middleware/requireAuth';
 
 /**
- * STUB ROUTES — they answer 501 until the real implementation is written.
- * The exact request/response format for each route is in docs/API_CONTRACT.md.
- * Replace each stub with a controller (see README "What you must build").
+ * Auth routes — request/response format for each one is in docs/API_CONTRACT.md §3.
+ * /register and /login are public (you cannot have a token yet); /me needs one.
  */
-const notImplemented =
-  (route: string): RequestHandler =>
-  (_req, res) => {
-    res.status(501).json({ message: `${route} is not implemented yet (see auth-service/README.md)` });
-  };
-
 const router = Router();
 
-router.post('/register', notImplemented('POST /api/auth/register'));
-router.post('/login', notImplemented('POST /api/auth/login'));
-router.get('/me', notImplemented('GET /api/auth/me'));
+router.post('/register', register);
+router.post('/login', login);
+router.get('/me', requireAuth, me);
 
 export default router;
