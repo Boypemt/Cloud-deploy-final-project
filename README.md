@@ -15,15 +15,17 @@ Shared (PM-owned): [`docs/`](docs) · [`deploy/`](deploy) · [`docker-compose.ym
 
 > Open **`campusmart.code-workspace`** in VS Code (File → Open Workspace from File) to see the 5 projects as 5 separate folders.
 
-## 📍 Project status
+## 📍 Project status — ✅ complete (v1.0.0)
 
-| Project | Owner | Status | What is ready |
+| Project | Owner | Status | What it does |
 |---|---|---|---|
-| `auth-service` | Bio | ✅ Done (merged) | Register, login (JWT), `/me`, admin + demo accounts seeded on start-up |
-| `product-service` | Por | ✅ Done (merged) | Product list/search/paging, admin create/update/delete, atomic stock endpoint, 8 demo products |
-| `order-service` | Fluke | ⏳ In progress | Can now call the real product-service (`GET /api/products/:id`, `PATCH /api/products/:id/stock`) |
-| `web-frontend` | Bonus | ⏳ In progress | Real login works — start with the Login page (task F1) |
-| `qa-automation` | Pound | ⏳ In progress | Smoke tests pass; login + product APIs are live, so their tests can drop the `wip` tag |
+| `auth-service` | Bio (PM) | ✅ Done | Register, login (JWT HS256), `/me`, admin + demo accounts seeded on start-up · 54 unit + 12 integration tests |
+| `product-service` | Por | ✅ Done | Product list / search / paging, admin create-update-delete, atomic stock endpoint, 8 demo products · 52 unit + 8 integration tests |
+| `order-service` | Fluke | ✅ Done | Quote, place, list, cancel orders; discount codes; prices and stock from product-service with rollback · 17 unit + 7 integration tests |
+| `web-frontend` | Bonus | ✅ Done | React login, register, products, cart + checkout, my orders; nginx API gateway · 27 unit tests |
+| `qa-automation` | Pound (Tester) | ✅ Done | 35 Robot Framework tests (30 API + 5 browser E2E), all passing, no `wip` left |
+
+**212 automated tests, 212 passing** — full results and defect log in [docs/TEST_SPEC.md §8](docs/TEST_SPEC.md#8-test-closure).
 
 **Test accounts** (created automatically when the stack starts):
 
@@ -32,20 +34,16 @@ Shared (PM-owned): [`docs/`](docs) · [`deploy/`](deploy) · [`docker-compose.ym
 | `demo@campusmart.local` | `Demo@1234` | user |
 | `admin@campusmart.local` | `Admin@1234` | admin |
 
-**What to do next**
+**Run the demo**
 
-- **Everyone:** `git checkout main && git pull`, then `docker compose up -d --build` — all 5 containers should be `(healthy)` in `docker compose ps`.
-  If a service fails with `ENOTFOUND mongo` or a port is "already allocated": `docker compose down --remove-orphans` and run `up` again (stop any other container using port 27017 first).
-- **Fluke:** implement order-service with the prompt in [`order-service/README.md`](order-service/README.md).
-- **Bonus:** implement the web pages with the prompt in [`web-frontend/README.md`](web-frontend/README.md), Login page first.
-- **Pound:** remove `wip` from TC-LOGIN-001/002 and the data-driven login test; automate TC-AUTH-001..003, TC-LOGIN-003, TC-SEC-001 and TC-PROD-001..005 ([`qa-automation/README.md`](qa-automation/README.md)).
-- **Bio:** review/merge PRs, release `v0.5.0`.
-
-Quick check that login and products work together (PowerShell):
-```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/auth/login -ContentType "application/json" -Body '{"email":"admin@campusmart.local","password":"Admin@1234"}'
-Invoke-RestMethod -Uri http://localhost:8080/api/products
+```bash
+git checkout main && git pull
+docker compose up -d --build      # all 5 containers should be (healthy) in: docker compose ps
+# open http://localhost:8080 and log in as the demo user
 ```
+If a service fails with `ENOTFOUND mongo` or a port is "already allocated": stop any other container using port 27017, run `docker compose down --remove-orphans`, then `up` again.
+
+Run the whole test suite against it: `cd qa-automation` → `robot -d results tests` (see [qa-automation/README.md](qa-automation/README.md)).
 
 ## Architecture
 
