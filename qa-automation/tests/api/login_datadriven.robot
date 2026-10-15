@@ -1,10 +1,10 @@
 *** Settings ***
-Documentation     Data-driven login tests: each CSV row in data/login_cases.csv becomes one test case.
+Documentation     Data-driven login tests (TC-LOGIN-DD): each CSV row in data/login_cases.csv becomes one test case.
 Library           DataDriver    file=../../data/login_cases.csv    encoding=utf-8
 Resource          ../../resources/api_keywords.robot
 Suite Setup       Create Gateway Session
 Test Template     Login Should Return Status
-Test Tags         API    Regression    US-02    wip
+Test Tags         API    Regression    US-02
 
 *** Test Cases ***
 Login With ${email} Expect ${expected_status}    default@x.com    x    200

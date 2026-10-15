@@ -1,5 +1,9 @@
 *** Test Cases ***;${email};${password};${expected_status}
 Valid demo user;demo@campusmart.local;Demo@1234;200
+Valid admin;admin@campusmart.local;Admin@1234;200
 Wrong password;demo@campusmart.local;wrong-password;401
 Unknown email;nobody@campusmart.local;Demo@1234;401
 Missing password;demo@campusmart.local;${EMPTY};400
+Missing email;${EMPTY};Demo@1234;400
+SQL-ish email;' OR 1=1 --;password;400
+Invalid email format;invalid-email;Demo@1234;400
