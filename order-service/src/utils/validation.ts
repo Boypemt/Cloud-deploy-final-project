@@ -34,9 +34,11 @@ export function validateOrderInput(body: unknown): ValidationResult<OrderInput> 
   }
 
   const discountCode = body.discountCode;
-  if (discountCode !== undefined && typeof discountCode !== 'string') {
+  if (discountCode !== undefined && discountCode !== null && typeof discountCode !== 'string') {
     return { ok: false, message: 'discountCode must be a string' };
   }
-  // An omitted code means no discount; a supplied blank code is still invalid pricing input.
-  return { ok: true, value: { items, discountCode: discountCode === undefined ? null : discountCode.trim() } };
+  // Missing, null or blank after trim all mean "no discount" — the web cart posts "" when the
+  // discount box is left empty, and that must not block checkout.
+  const trimmed = typeof discountCode === 'string' ? discountCode.trim() : '';
+  return { ok: true, value: { items, discountCode: trimmed === '' ? null : trimmed } };
 }

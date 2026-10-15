@@ -38,6 +38,11 @@ export function createApp() {
       res.status(err.status).json({ message: err.message });
       return;
     }
+    // express.json() could not parse the body → the client's fault, so 400 (API_CONTRACT §1)
+    if (err?.type === 'entity.parse.failed') {
+      res.status(400).json({ message: 'Invalid JSON body' });
+      return;
+    }
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   };
